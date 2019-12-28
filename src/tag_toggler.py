@@ -1,107 +1,111 @@
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QKeySequence
+# Tag Toggler 2
+# Copyright: 2019 ijngd (port to 2.1)
+#            Don March <don@ohspite.net>
+#            2012 Cayenne Boyer (tag toggler says that it's "Based in part on Quick Tagging by Cayenne Boyer")
+# License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+
+import os
+
+from anki.lang import _
+from anki.hooks import addHook, wrap
 
 from aqt import mw
 from aqt.utils import getTag, tooltip, showInfo
+from aqt.qt import *
 from aqt.reviewer import Reviewer
-from anki.hooks import wrap
 
 
-def tagKeyHandler(self, event, _old):
-    """Wrap default _keyHandler with new keybindings."""
-    key = event.key()
+addon_path = os.path.dirname(__file__)
+foldername = os.path.basename(addon_path)
+addonname = mw.addonManager.addonName(foldername)
 
-    if key == Qt.Key_unknown:
-        _old(self, event)
-    # only modifier pushed
-    if (key == Qt.Key_Control or
-        key == Qt.Key_Shift or
-        key == Qt.Key_Alt or
-        key == Qt.Key_Meta):
-        _old(self, event)
 
-    # check for combination of keys and modifiers
-    modifiers = event.modifiers()
-    if modifiers & Qt.ShiftModifier:
-        key += Qt.SHIFT
-    if modifiers & Qt.ControlModifier:
-        key += Qt.CTRL
-    if modifiers & Qt.AltModifier:
-        key += Qt.ALT
-    if modifiers & Qt.MetaModifier:
-        key += Qt.META
+def gc(arg, fail=False):
+    return mw.addonManager.getConfig(__name__).get(arg, fail)
 
-    key_sequence = QKeySequence(key).toString(QKeySequence.PortableText)
 
-    ## Uncomment this to display keybinding strings for keys that are pressed
-    ## when reviewing cards:
+def check_conf(conf):
+    not_a_dict = []
+    illegal_actions = []
+    illegal_after = []
+    for k, v in conf.items():
+        if not isinstance(v, dict):
+            not_a_dict.append(k)
+            tooltip('illegal value in config')
+        else:
+            if 'action' in v:
+                if v['action'] not in ['add', 'delete', 'toggle', "tag_dialog_shortcut"]:
+                    illegal_actions.append(k)
+            if 'after' in v:
+                aa = ['bury', 'bury-card', 'bury-note', 'suspend', 'suspend-card', 'suspend-note']
+                if v['after'] not in aa:
+                    illegal_after.append(k)
+    infostr = 'Error in config for the addon "{}"\n\n'.format(addonname)
+    if not_a_dict:
+        infostr += "These values are not a dict:\n"
+        infostr += "\n, ".join([str(x) for x in not_a_dict])
+    if illegal_actions:
+        infostr += "\n\nthe values for these keys don't contain a valid action:\n"
+        infostr += "\n, ".join([str(x) for x in illegal_actions])
+    if illegal_after:
+        infostr += "\n\nthe values for these keys don't contain a valid value for \"after\":\n"
+        infostr += "\n, ".join([str(x) for x in illegal_after])
+    showInfo(infostr)
+mw.addonManager.setConfigUpdatedAction(__name__, check_conf)
 
-    # showInfo(key_sequence)
 
-    note = mw.reviewer.card.note()
-    if tag_dialog_shortcut and key_sequence == tag_dialog_shortcut:
+def addShortcuts(cuts):
+    for k, v in mw.addonManager.getConfig(__name__).items():
+        cuts.append((k, lambda vals=v: tagactions(vals)))
+addHook("reviewStateShortcuts", addShortcuts)
+
+
+def tagactions(v):
+    # tooltip(v)
+    card = mw.reviewer.card
+    note = card.note()
+    if v.get("action", "") == "tag_dialog_shortcut": 
         mw.checkpoint(_("Edit Tags"))
         edit_tag_dialog(note)
-    elif key_sequence in tag_shortcuts:
-        binding = tag_shortcuts[key_sequence]
-        if 'action' not in binding:
-            binding['action'] = 'add'
-
+    else:
+        if 'action' not in v:
+            v['action'] = 'add'
         same_card_shown = False
-        if ('after' in binding and
-            binding['after'] in ['suspend', 'suspend-note']):
+        if ('after' in v and v['after'] in ['suspend', 'suspend-note']):
             mw.checkpoint("Edit Tags and Suspend Note")
-            tooltip_message = 'Suspended note and edited tags: {}'
-            self.mw.col.sched.suspendCards(
-                [card.id for card in self.card.note().cards()])
-        elif 'after' in binding and binding['after'] in ['bury', 'bury-note']:
+            ttmsg = 'Suspended note and edited tags: {}'
+            mw.col.sched.suspendCards(
+                [c.id for c in note.cards()])
+        elif 'after' in v and v['after'] in ['bury', 'bury-note']:
             mw.checkpoint("Edit Tags and Bury Note")
-            tooltip_message = 'Buried note and edited tags: {}'
+            ttmsg = 'Buried note and edited tags: {}'
             mw.col.sched.buryNote(note.id)
-        elif 'after' in binding and binding['after'] == 'suspend-card':
+        elif 'after' in v and v['after'] == 'suspend-card':
             mw.checkpoint("Edit Tags and Suspend Card")
-            tooltip_message = 'Suspended card and edited tags: {}'
-            self.mw.col.sched.suspendCards([self.card.id])
-        elif 'after' in binding and binding['after'] == 'bury-card':
+            ttmsg = 'Suspended card and edited tags: {}'
+            mw.col.sched.suspendCards([card.id])
+        elif 'after' in v and v['after'] == 'bury-card':
             mw.checkpoint("Edit Tags and Bury Card")
-            tooltip_message = 'Buried card and edited tags: {}'
-            mw.col.sched.buryCards([self.card.id])
+            ttmsg = 'Buried card and edited tags: {}'
+            mw.col.sched.buryCards([card.id])
         else:
             mw.checkpoint(_("edit Tags"))
-            tooltip_message = 'Edited tags: {}'
+            ttmsg = 'Edited tags: {}'
             same_card_shown = True
-
-        tag_edits = edit_note_tags(note, binding['tags'], binding['action'])
+        tag_edits = edit_note_tags(note, v['tags'], v['action'])
         reset_and_redraw(same_card_shown)
-        tooltip(tooltip_message.format(tag_edits))
-    else:
-        _old(self, event)
+        tooltip(ttmsg.format(tag_edits))
 
 
 def edit_tag_dialog(note):
     """Prompt for tags and add the results to note."""
     prompt = _("Edit tag list:")
     (tag_string, dialog_status) = getTag(mw, mw.col, prompt, default=note.stringTags())
-    if dialog_status != 0:  # means "Cancel"
+    if dialog_status:
         note.setTagsFromStr(tag_string)
         note.flush()
         reset_and_redraw(same_card_shown=True)
         tooltip('Tags set to: "{}"'.format(tag_string))
-
-
-def reset_and_redraw(same_card_shown=False):
-    """Rebuild the scheduler and redraw the card."""
-    in_answer_state = (mw.reviewer.state == "answer")
-    if same_card_shown:
-        mw.reviewer.card.load()
-        mw.reviewer.cardQueue.append(mw.reviewer.card)
-    mw.moveToState("review")
-
-    if in_answer_state and same_card_shown:
-        try:
-            mw.reviewer._showAnswer()
-        except:
-            pass
 
 
 def edit_note_tags(note, tags, action='add'):
@@ -138,32 +142,16 @@ def edit_note_tags(note, tags, action='add'):
         return "(no changes)"
 
 
-def shortcuts_are_okay():
-    error_message = (
-        "The Tag Toggle add-on will not be started.\n\n"
-        "Check the configuration for an undefined '{}' "
-        "value '{}' in tag_shortcuts:\n\n"
-        "{}")
+def reset_and_redraw(same_card_shown=False):
+    """Rebuild the scheduler and redraw the card."""
+    in_answer_state = (mw.reviewer.state == "answer")
+    if same_card_shown:
+        mw.reviewer.card.load()
+        mw.reviewer.cardQueue.append(mw.reviewer.card)
+    mw.moveToState("review")
 
-    def check_command(command, command_type, options):
-        if command_type in command:
-            value = command[command_type]
-            if value not in options:
-                showInfo(error_message.format(command_type, value, command))
-                return False
-        return True
-
-    for shortcut in tag_shortcuts:
-        command = tag_shortcuts[shortcut]
-        if not check_command(command, 'action', ['add', 'delete', 'toggle']):
-            return False
-        if not check_command(command, 'after',
-                             ['bury', 'bury-card', 'bury-note',
-                              'suspend', 'suspend-card', 'suspend-note']):
-            return False
-
-    return True
-
-
-if shortcuts_are_okay():
-    Reviewer._keyHandler = wrap(Reviewer._keyHandler, tagKeyHandler, "around")
+    if in_answer_state and same_card_shown:
+        try:
+            mw.reviewer._showAnswer()
+        except:
+            pass
