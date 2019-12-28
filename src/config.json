@@ -1,0 +1,17 @@
+{
+    "Shift+H": {
+        "action": "toggle",
+        "tags": "checklater"
+    },
+    "h": {
+        "action": "delete",
+        "tags": "checklater"
+    },
+    "Alt+Shift+Z": {
+        "tags": "test-a test-b", 
+        "after": "suspend-card"
+    },
+    "shift+r": {
+        "action": "tag_dialog_shortcut"
+    }
+}
