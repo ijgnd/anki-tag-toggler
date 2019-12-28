@@ -1,41 +1,12 @@
--*- mode: text; eval: (auto-fill-mode -1) -*-
+<b>This add-on wasn't tested much and might contain bugs. Use this at your own risk!</b>
 
-(<b>Please post bug reports and feature requests on GitHub</b>.  We can't track and discuss problems in the comments.)
+This is an adaption of the add-on <a href="https://ankiweb.net/shared/info/874498171" rel="nofollow">Tag Toggler</a> to Anki version 2.1 by a different author. I made only very few changes.
 
-<b>Overview</b>
+See the <a href="https://ankiweb.net/shared/info/874498171" rel="nofollow">original description</a>.
 
-Tag Toggler is an add-on for Anki 2 that lets you quickly add and edit tags while reviewing.  You can customize keyboard shortcuts for editing all tags on the current card, as well as quickly adding, deleting, or toggling specific preset tags.  After applying the tags, you can optionally bury the card, bury the note, suspend the card, or suspend the note.
+The configuration now uses the Anki add-on config dialog. There were slight changes to the config, check the readme on the side of the add-on config window.
 
-Applying a tag to a card applies the tags to all cards in that note, which is how Anki always handles tags.
+<b># bugs</b>
+Please do not use reviews for bug reports or support requests. I don't get notified of your reviews, and properly troubleshooting an issue through them is nearly impossible (formatting is limited and I can't reply multiple times). If you find a bug let me know on <a href="https://github.com/ijgnd/anki-tag-toggler/issues" rel="nofollow">github</a> or via reddit (/u/ijgnord).
 
-Here are some ways that I use the add-on:
-<ul>
-<li> Toggle the 'hard' tag on the current card:
-<code>    'Shift+H': {'tags': 'hard', 'action': 'toggle'}</code></li>
-<li> Add a 'TODO' tag and bury cards in the current note:
-<code>    'Shift+T': {'tags': 'TODO', 'after': 'bury-note'}</code></li>
-<li> Add an 'easy' tag and suspend the current card:
-<code>    'Shift+A': {'tags': 'easy', 'after': 'suspend-card'}</code></ul></li>
-Customization is fairly straightforward, with instructions in the source code.
-
-Tag Toggler was inspired by the Quick Tagging add-on by Cayenne Boyer.
-
-<b>Recent Changes</b>
-<ul>
-<li> 2017-02-15: Version 1.2.2
-  - Fix bug that sometimes caused a new card to be shown after applying tags.</li>
-<li> 2016-04-23: Version 1.2.1
-  - Fix bug that showed the next card already flipped to answer state.</li>
-<li> 2016-02-28: Version 1.2.0
-  - Added support for modifier keys in keybindings.
-  - Restore reviewer state after changing tags.</li>
-</ul>
-
-<b>Links</b>
-
-Source code repository: github.com/ohspite/anki-tag-toggler
-
-<b>Feedback?</b>
-
-If you have any bugs to report, feature requests, or other feedback, please use the GitHub issue tracker: github.com/ohspite/anki-tag-toggler/issues
 
