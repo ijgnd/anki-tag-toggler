@@ -3,7 +3,7 @@
 You may use only keys/key combinations that are not used by Anki or other add-ons. If you
 set a key/key combinatino that"s already used the key/key combination won"t work.
 
-There"s no option to disable a shortcut: just delete lines that you don"t want to use.
+There's no option to disable a shortcut: just delete lines that you don't want to use.
 
 The config consists of a so-called "dictionary" which assigns a key combination like "shift+h"
 to a dictionary of values. Valid keys in that dict are `tags`, `action`, and `after`.
@@ -16,7 +16,7 @@ and "toggle" (delete tag if present, add it if absent).
 
 `after`: What to do to a card after modifying the tags; options are
 "bury-card", "bury-note", "suspend-card" or "suspend-note".  Also "suspend"
-and "bury, which are the same as the "-note" versions.
+and "bury", which are the same as the "-note" versions.
 
 Example keybinding to add tags: 
     `"h": {"tags": "hard"}`
