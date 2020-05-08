@@ -50,7 +50,8 @@ def check_conf(conf):
     if illegal_after:
         infostr += "\n\nthe values for these keys don't contain a valid value for \"after\":\n"
         infostr += "\n, ".join([str(x) for x in illegal_after])
-    showInfo(infostr)
+    if any([not_a_dict, illegal_actions, illegal_after]):
+        showInfo(infostr)
 mw.addonManager.setConfigUpdatedAction(__name__, check_conf)
 
 
